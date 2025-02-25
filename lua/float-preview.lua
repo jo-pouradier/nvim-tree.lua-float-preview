@@ -328,7 +328,7 @@ function FloatPreview:attach(bufnr)
     for _, key in ipairs(self.cfg.mapping.preview) do
       vim.keymap.set("n", key, function()
         local _, node = pcall(get_node)
-        if self.path ~= nil and self.path == node.path then
+        if self.path ~= nil and self.path == node.absolute_path then
           self.close_preview(self)
           return
         end
@@ -347,9 +347,11 @@ function FloatPreview:attach(bufnr)
         if self.cfg.auto_preview then
           if bufnr == vim.api.nvim_get_current_buf() then
             self:preview_under_cursor()
-          else
-            self:_close "changed buffer"
+            return
           end
+
+          self:_close "changed buffer"
+          return
         end
       end,
     })
@@ -360,12 +362,7 @@ function FloatPreview:attach(bufnr)
     vim.api.nvim_create_autocmd({ "CursorMoved" }, {
       group = preview_au,
       callback = function()
-        local _, node = pcall(get_node)
-        if self.path == node.path then
-          self.close_preview(self)
-          return
-        end
-        self.close_preview(self)
+        self:close_preview()
       end,
     })
   )
