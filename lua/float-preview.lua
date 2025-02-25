@@ -67,6 +67,17 @@ local function all_open()
   end
 end
 
+local function toggle_or_preview()
+  local node = api.tree.get_node_under_cursor()
+  if not node then
+    return
+  end
+
+  if node.type ~= "file" then
+    api.node.open.edit() -- Toggle folder
+  end
+end
+
 function FloatPreview.setup(cfg)
   CFG.update(cfg)
 
@@ -75,11 +86,16 @@ function FloatPreview.setup(cfg)
   disabled = not cfg.toggled_on
 
   if cfg.wrap_nvimtree_commands then
+    if cfg.preview_on_bakground then
+      api.node.open.preview = FloatPreview.close_wrap(api.node.open.preview)
+    else
+      api.node.open.preview = toggle_or_preview -- disable the
+    end
+
     api.node.open.tab = FloatPreview.close_wrap(api.node.open.tab)
     api.node.open.vertical = FloatPreview.close_wrap(api.node.open.vertical)
     api.node.open.horizontal = FloatPreview.close_wrap(api.node.open.horizontal)
     api.node.open.edit = FloatPreview.close_wrap(api.node.open.edit)
-    api.node.open.preview = FloatPreview.close_wrap(api.node.open.preview)
     api.node.open.no_window_picker = FloatPreview.close_wrap(api.node.open.no_window_picker)
     api.fs.create = FloatPreview.close_wrap(api.fs.create)
     api.fs.remove = FloatPreview.close_wrap(api.fs.remove)
@@ -137,9 +153,6 @@ end
 
 function FloatPreview:_close(reason)
   if self.path ~= nil and self.buf ~= nil then
-    if reason then
-      -- vim.notify(string.format("fp close %s", reason))
-    end
     pcall(vim.api.nvim_win_close, self.win, { force = true })
     pcall(vim.api.nvim_buf_delete, self.buf, { force = true })
     self.win = nil
@@ -305,21 +318,34 @@ function FloatPreview:attach(bufnr)
       FloatPreview.toggle()
     end, { buffer = bufnr })
   end
+
+  for _, key in ipairs(self.cfg.mapping.preview) do
+    vim.keymap.set("n", key, function()
+      if bufnr == vim.api.nvim_get_current_buf() then
+        self:preview_under_cursor()
+      else
+        self:_close "changed buffer"
+      end
+    end, { buffer = bufnr })
+  end
+
   local au = {}
 
-  table.insert(
-    au,
-    vim.api.nvim_create_autocmd({ "CursorHold" }, {
-      group = preview_au,
-      callback = function()
-        if bufnr == vim.api.nvim_get_current_buf() then
-          self:preview_under_cursor()
-        else
-          self:_close "changed buffer"
-        end
-      end,
-    })
-  )
+  if self.cfg.auto_preview then
+    table.insert(
+      au,
+      vim.api.nvim_create_autocmd({ "CursorHold" }, {
+        group = preview_au,
+        callback = function()
+          if bufnr == vim.api.nvim_get_current_buf() then
+            self:preview_under_cursor()
+          else
+            self:_close "changed buffer"
+          end
+        end,
+      })
+    )
+  end
 
   api.events.subscribe(Event.TreeClose, function(opts)
     if not self then

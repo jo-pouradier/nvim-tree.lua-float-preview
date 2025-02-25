@@ -2,6 +2,9 @@ local CFG = {
   _cfg = {
     -- Whether the float preview is enabled by default. When set to false, it has to be "toggled" on.
     toggled_on = true,
+    -- preview in background
+    preview_on_bakground = false, --can get the default behavior if needed
+    auto_preview = true,
     -- wrap nvimtree commands
     wrap_nvimtree_commands = true,
     -- lines for scroll
@@ -21,6 +24,8 @@ local CFG = {
       up = { "<C-e>", "<C-u>" },
       -- enable/disable float windows
       toggle = { "<C-x>" },
+      -- preview with key
+      preview = nil,
     },
     -- hooks if return false preview doesn't shown
     hooks = {
