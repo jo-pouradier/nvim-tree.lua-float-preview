@@ -331,7 +331,7 @@ function FloatPreview:attach(bufnr)
     for _, key in ipairs(self.cfg.mapping.preview) do
       vim.keymap.set("n", key, function()
         local _, node = pcall(get_node)
-        if self.path == node.path then
+        if self.path ~= nil and self.path == node.path then
           self.close_preview(self)
           return
         end
