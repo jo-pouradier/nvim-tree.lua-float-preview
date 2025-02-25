@@ -321,31 +321,29 @@ function FloatPreview:attach(bufnr)
 
   for _, key in ipairs(self.cfg.mapping.preview) do
     vim.keymap.set("n", key, function()
-      if bufnr == vim.api.nvim_get_current_buf() then
-        self:preview_under_cursor()
-      else
-        self:_close "changed buffer"
+      if self.cfg.mapping.preview then
+        self.cfg.auto_preview = true
       end
     end, { buffer = bufnr })
   end
 
   local au = {}
 
-  if self.cfg.auto_preview then
-    table.insert(
-      au,
-      vim.api.nvim_create_autocmd({ "CursorHold" }, {
-        group = preview_au,
-        callback = function()
+  table.insert(
+    au,
+    vim.api.nvim_create_autocmd({ "CursorHold" }, {
+      group = preview_au,
+      callback = function()
+        if self.cfg.auto_preview then
           if bufnr == vim.api.nvim_get_current_buf() then
             self:preview_under_cursor()
           else
             self:_close "changed buffer"
           end
-        end,
-      })
-    )
-  end
+        end
+      end,
+    })
+  )
 
   api.events.subscribe(Event.TreeClose, function(opts)
     if not self then
