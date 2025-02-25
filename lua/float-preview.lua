@@ -330,6 +330,12 @@ function FloatPreview:attach(bufnr)
   if self.cfg.mapping.preview then
     for _, key in ipairs(self.cfg.mapping.preview) do
       vim.keymap.set("n", key, function()
+        local _, node = pcall(get_node)
+        if self.path == node.path then
+          self.close_preview(self)
+          return
+        end
+
         self:preview_under_cursor()
       end, { buffer = bufnr })
     end
@@ -354,7 +360,7 @@ function FloatPreview:attach(bufnr)
 
   table.insert(
     au,
-    vim.api.nvim_create_autocmd("CursorMoved", {
+    vim.api.nvim_create_autocmd({ "CursorMoved" }, {
       group = preview_au,
       callback = function()
         local _, node = pcall(get_node)
