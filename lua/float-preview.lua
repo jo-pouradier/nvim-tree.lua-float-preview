@@ -258,11 +258,7 @@ function FloatPreview:preview_under_cursor()
   if not node then
     return
   end
-
-  if node.absolute_path == self.path then
-    return
-  end
-  self:_close "change file"
+  self.close_preview(self)
 
   if node.type ~= "file" then
     return
@@ -278,13 +274,6 @@ function FloatPreview:preview_under_cursor()
 end
 
 function FloatPreview:scroll(line)
-  local _, node = pcall(get_node)
-  if not node then
-    return
-  end
-  if node.absolute_path == self.path then
-    self:_close "change file"
-  end
   if self.win then
     local ok, _ = pcall(vim.api.nvim_win_set_cursor, self.win, { line, 0 })
     if ok then
@@ -305,6 +294,18 @@ function FloatPreview:scroll_up()
     local next_line = math.max(self.current_line - self.cfg.scroll_lines, 1)
     self:scroll(next_line)
   end
+end
+
+function FloatPreview:close_preview()
+  local _, node = pcall(get_node)
+  if not node then
+    return
+  end
+
+  if node.absolute_path == self.path then
+    return
+  end
+  self:_close "cursor moved"
 end
 
 function FloatPreview:attach(bufnr)
@@ -347,6 +348,21 @@ function FloatPreview:attach(bufnr)
             self:_close "changed buffer"
           end
         end
+      end,
+    })
+  )
+
+  table.insert(
+    au,
+    vim.api.nvim_create_autocmd("CursorMoved", {
+      group = preview_au,
+      callback = function()
+        local _, node = pcall(get_node)
+        if self.path == node.path then
+          self.close_preview(self)
+          return
+        end
+        self.close_preview(self)
       end,
     })
   )
