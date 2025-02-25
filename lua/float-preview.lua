@@ -327,16 +327,17 @@ function FloatPreview:attach(bufnr)
 
     self:preview_under_cursor()
   end
-  vim.api.nvim_create_user_command("TogglePreviewFile", toggle_preview, { buffer = bufnr })
+  vim.api.nvim_create_user_command("TogglePreviewFile", toggle_preview, {})
 
   local au = {}
-  -- table.insert(
-  --   au,
-  --   vim.api.nvim_create_autocmd("BufEnter", {
-  --     callback = function()
-  --     end,
-  --   })
-  -- )
+  table.insert(
+    au,
+    vim.api.nvim_create_autocmd("BufDelete", {
+      callback = function()
+        vim.api.nvim_del_user_command "TogglePreviewFile"
+      end,
+    })
+  )
   table.insert(
     au,
     vim.api.nvim_create_autocmd({ "CursorHold" }, {
