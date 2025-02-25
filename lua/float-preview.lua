@@ -86,12 +86,7 @@ function FloatPreview.setup(cfg)
   disabled = not cfg.toggled_on
 
   if cfg.wrap_nvimtree_commands then
-    if cfg.preview_on_bakground then
-      api.node.open.preview = FloatPreview.close_wrap(api.node.open.preview)
-    else
-      api.node.open.preview = toggle_or_preview -- disable the
-    end
-
+    api.node.open.preview = toggle_or_preview -- disable the
     api.node.open.tab = FloatPreview.close_wrap(api.node.open.tab)
     api.node.open.vertical = FloatPreview.close_wrap(api.node.open.vertical)
     api.node.open.horizontal = FloatPreview.close_wrap(api.node.open.horizontal)
@@ -258,7 +253,6 @@ function FloatPreview:preview_under_cursor()
   if not node then
     return
   end
-  self.close_preview(self)
 
   if node.type ~= "file" then
     return
@@ -324,19 +318,18 @@ function FloatPreview:attach(bufnr)
     end, { buffer = bufnr })
   end
 
-  if self.cfg.mapping.preview then
-    for _, key in ipairs(self.cfg.mapping.preview) do
-      vim.keymap.set("n", key, function()
-        local _, node = pcall(get_node)
-        if self.path ~= nil and self.path == node.absolute_path then
-          self.close_preview(self)
-          return
-        end
-
-        self:preview_under_cursor()
-      end, { buffer = bufnr })
+  local toggle_preview = function()
+    local _, node = pcall(get_node)
+    if self.path ~= nil and self.path == node.absolute_path then
+      self.close_preview(self)
+      return
     end
+
+    self:preview_under_cursor()
   end
+
+  vim.api.nvim_create_user_command("ToggleFilePreview", toggle_preview, { buffer = bufnr })
+
   local au = {}
 
   table.insert(
