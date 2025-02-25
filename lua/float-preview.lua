@@ -278,6 +278,13 @@ function FloatPreview:preview_under_cursor()
 end
 
 function FloatPreview:scroll(line)
+  local _, node = pcall(get_node)
+  if not node then
+    return
+  end
+  if node.absolute_path == self.path then
+    self:_close "change file"
+  end
   if self.win then
     local ok, _ = pcall(vim.api.nvim_win_set_cursor, self.win, { line, 0 })
     if ok then
@@ -319,14 +326,13 @@ function FloatPreview:attach(bufnr)
     end, { buffer = bufnr })
   end
 
-  for _, key in ipairs(self.cfg.mapping.preview) do
-    vim.keymap.set("n", key, function()
-      if self.cfg.mapping.preview then
-        self.cfg.auto_preview = true
-      end
-    end, { buffer = bufnr })
+  if self.cfg.mapping.preview then
+    for _, key in ipairs(self.cfg.mapping.preview) do
+      vim.keymap.set("n", key, function()
+        self:preview_under_cursor()
+      end, { buffer = bufnr })
+    end
   end
-
   local au = {}
 
   table.insert(
