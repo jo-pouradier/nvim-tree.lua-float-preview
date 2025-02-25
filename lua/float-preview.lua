@@ -302,9 +302,6 @@ function FloatPreview:close_preview()
     return
   end
 
-  if node.absolute_path == self.path then
-    return
-  end
   self:_close "cursor moved"
 end
 
@@ -332,8 +329,7 @@ function FloatPreview:attach(bufnr)
       vim.keymap.set("n", key, function()
         local _, node = pcall(get_node)
         if self.path ~= nil and self.path == node.path then
-          -- self.close_preview(self)
-          self:_close "toggle preview"
+          self.close_preview(self)
           return
         end
 
