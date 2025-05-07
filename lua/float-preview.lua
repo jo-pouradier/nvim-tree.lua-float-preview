@@ -333,8 +333,11 @@ function FloatPreview:attach(bufnr)
   table.insert(
     au,
     vim.api.nvim_create_autocmd("BufDelete", {
+      group = preview_au,
       callback = function()
-        vim.api.nvim_del_user_command "TogglePreviewFile"
+        if vim.fn.exists ":TogglePreviewFile" > 0 then
+          vim.api.nvim_del_user_command "TogglePreviewFile"
+        end
       end,
     })
   )
